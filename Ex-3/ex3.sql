@@ -217,6 +217,33 @@ WHERE
     AND ORDERS.CUST_ID = CUSTOMER.CUST_ID
     AND PIZZA.PIZZA_ID = ORDER_LIST.PIZZA_ID;
 
+
+REM: 8. Display the details (order number, pizza type, customer name, qty) of the pizza with ordered quantity more than the average ordered quantity of its pizza type.
+
+SELECT
+    O.ORDER_NO,
+    P.PIZZA_TYPE,
+    C.CUST_NAME,
+    OL.QTY
+FROM
+    ORDERS O,
+    PIZZA P,
+    CUSTOMER C,
+    ORDER_LIST OL
+WHERE
+    OL.QTY > (
+        SELECT
+            AVG(OL2.QTY)
+        FROM
+            ORDER_LIST OL2
+        WHERE OL2.PIZZA_ID = OL.PIZZA_ID
+        GROUP BY P.PIZZA_ID
+    )
+    AND O.ORDER_NO = OL.ORDER_NO
+    AND O.CUST_ID = C.CUST_ID
+    AND P.PIZZA_ID = OL.PIZZA_ID;
+
+
 REM: 9.Display the customer details who placed all pizza types in a single order
 
 SELECT
@@ -238,4 +265,183 @@ WHERE
             CUSTOMER.CUST_ID
     );
 
-REM: 10. 
+REM: 10. Display the order details that contains the pizza quantity more than the average pizza quantity or Pan or Italian Type Pizza.
+SELECT
+    *
+FROM
+    ORDERS     O
+WHERE
+    O.ORDER_NO IN(
+        SELECT
+            OL.ORDER_NO
+        FROM
+            ORDER_LIST OL
+        GROUP BY
+            OL.ORDER_NO
+        HAVING
+            SUM(OL.QTY) > (
+                SELECT
+                    AVG(OL.QTY)
+                FROM
+                    ORDER_LIST OL
+                WHERE
+                    OL.PIZZA_ID = (
+                        SELECT
+                            PIZZA_ID
+                        FROM
+                            PIZZA
+                        WHERE
+                            PIZZA.PIZZA_TYPE = 'italian'
+                    )
+                GROUP BY
+                    OL.PIZZA_ID
+            )
+    )
+UNION
+SELECT
+    *
+FROM
+    ORDERS     O
+WHERE
+    O.ORDER_NO IN(
+        SELECT
+            DISTINCT(OL.ORDER_NO)
+        FROM
+            ORDER_LIST OL
+        GROUP BY
+            OL.ORDER_NO
+        HAVING
+            SUM(OL.QTY) > (
+                SELECT
+                    AVG(OL.QTY)
+                FROM
+                    ORDER_LIST OL
+                WHERE
+                    OL.PIZZA_ID = (
+                        SELECT
+                            PIZZA_ID
+                        FROM
+                            PIZZA
+                        WHERE
+                            PIZZA.PIZZA_TYPE = 'pan'
+                    )
+                GROUP BY
+                    OL.PIZZA_ID
+            )
+    );
+
+REM: 11.Find the order(s) that contains Pan pizza but not the Italian pizza type.
+
+SELECT
+    O.ORDER_NO,
+    O.CUST_ID,
+    O.DELV_DATE
+FROM
+    ORDERS     O
+WHERE
+    O.ORDER_NO IN (
+        SELECT
+            DISTINCT(OL.ORDER_NO)
+        FROM
+            ORDER_LIST OL
+        WHERE
+            OL.PIZZA_ID = (
+                SELECT
+                    PIZZA_ID
+                FROM
+                    PIZZA
+                WHERE
+                    PIZZA_TYPE = 'pan'
+            )
+    ) MINUS
+    SELECT
+        O.ORDER_NO,
+        O.CUST_ID,
+        O.DELV_DATE
+    FROM
+        ORDERS     O
+    WHERE
+        O.ORDER_NO IN (
+            SELECT
+                DISTINCT(OL.ORDER_NO)
+            FROM
+                ORDER_LIST OL
+            WHERE
+                OL.PIZZA_ID = (
+                    SELECT
+                        PIZZA_ID
+                    FROM
+                        PIZZA
+                    WHERE
+                        PIZZA_TYPE = 'italian'
+                )
+        );
+
+REM: 12.Display the customer(s) who ordered both Italian and Grilled pizza type.
+SELECT
+    *
+FROM
+    CUSTOMER
+WHERE
+    CUST_ID IN (
+        SELECT
+            DISTINCT(O.CUST_ID)
+        FROM
+            ORDERS     O,
+            ORDER_LIST OL
+        WHERE
+            O.ORDER_NO = OL.ORDER_NO
+            AND OL.PIZZA_ID = (
+                SELECT
+                    PIZZA_ID
+                FROM
+                    PIZZA
+                WHERE
+                    PIZZA_TYPE = 'italian'
+            )
+    ) INTERSECT
+    SELECT
+        *
+    FROM
+        CUSTOMER
+    WHERE
+        CUST_ID IN (
+            SELECT
+                DISTINCT(O.CUST_ID)
+            FROM
+                ORDERS     O,
+                ORDER_LIST OL
+            WHERE
+                O.ORDER_NO = OL.ORDER_NO
+                AND OL.PIZZA_ID = (
+                    SELECT
+                        PIZZA_ID
+                    FROM
+                        PIZZA
+                    WHERE
+                        PIZZA_TYPE = 'grilled'
+                )
+        );
+
+SELECT
+    PIZZA_ID
+FROM
+    PIZZA
+WHERE
+    PIZZA.PIZZA_TYPE = 'pan';
+
+SELECT
+    AVG(OL.QTY)
+FROM
+    ORDER_LIST OL
+WHERE
+    OL.PIZZA_ID = (
+        SELECT
+            PIZZA_ID
+        FROM
+            PIZZA
+        WHERE
+            PIZZA.PIZZA_TYPE = 'pan'
+    )
+GROUP BY
+    OL.PIZZA_ID;
