@@ -79,7 +79,7 @@ DESC order_list;
 
 REM: Running PIZZA_DB.sql
 
-@D:\Programming\SQL\Ex-3\Pizza_DB.sql
+@/home/shuddown/Programs/SQL/SQL-Exercises/Ex-3/Pizza_DB.sql
 SET SERVEROUTPUT ON;
 ACCEPT p_type PROMPT 'Give the pizza type: ';
 DECLARE 
@@ -251,5 +251,6 @@ BEGIN
     CLOSE order_nos;
 END;
 /
+
 
 

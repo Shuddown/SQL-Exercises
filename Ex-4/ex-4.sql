@@ -19,6 +19,12 @@ DROP TABLE CUSTOMER;
 
 DROP TABLE PIZZA;
 
+DROP VIEW Pizza_200_250;
+
+DROP VIEW Pizza_Type_Order;
+
+DROP VIEW Spanish_Customers;
+
 REM: Creating the tables
 CREATE TABLE CUSTOMER(
     CUST_ID CHAR(4),
@@ -111,10 +117,10 @@ ON ol.ORDER_NO = o.ORDER_NO
 WHERE ol.PIZZA_ID = (
     SELECT PIZZA_ID
     FROM PIZZA
-    WHERE PIZZA_TYPE = "spanish"
+    WHERE PIZZA_TYPE = 'spanish'
 );
 
-SELECT * FROM Spanish_Customers
+SELECT * FROM Spanish_Customers;
 
 REM: This view is not updateable as it relies on data from more than one table, and contains joins as well as subqueries.
 
